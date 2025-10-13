@@ -3,9 +3,11 @@ Wordle game using SkyMass library
 
 How to run:
 
-mkdir skymass & cd skymass
-npm init -y
-npm install @skymass/skymass
+```bash
+mkdir skymass & cd skymass  
+npm init -y  
+npm install @skymass/skymass  
+```
 
 Get your SkyMass API Key
 

@@ -4,7 +4,7 @@ const sm = new SkyMass({ key: process.env["SKYMASS_KEY"] });
 
 const WORDS = ["APPLE", "BRAVE", "CRANE", "DANCE", "EPOCH"];
 
-const maxGuesses = 5;
+const maxGuesses = 6;
 
 let playerWon = false;
 
@@ -44,7 +44,7 @@ function computeFeedback(guess, answer) {
 }
 
 sm.page("/wordle", (ui) => {
-  ui.md`This is Wordle using SkyMass. You have **5** tries to guess the word.  
+  ui.md`This is Wordle using SkyMass. You have **6** tries to guess the word.  
   You will be given feedback for each letter of your guess in the table below.  
   **Green** means the letter is in the word and in the correct spot.  
   **Blue** means the letter is in the word but in the wrong spot.  

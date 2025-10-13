@@ -11,5 +11,8 @@ npm install @skymass/skymass
 
 Get your SkyMass API Key
 
+```bash
 SKYMASS_KEY=<YOUR_SKYMASS_KEY> node --watch wordle.mjs
+```
+
 Open the output URL

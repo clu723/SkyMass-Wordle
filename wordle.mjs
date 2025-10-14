@@ -6,7 +6,8 @@ const WORDS = ["APPLE", "BRAVE", "CRANE", "DANCE", "EPOCH"];
 
 const maxGuesses = 6;
 
-let playerWon = false;
+const gameStats = [];
+
 
 function pickWord() {
   return WORDS[Math.floor(Math.random() * WORDS.length)];
@@ -51,11 +52,28 @@ sm.page("/wordle", (ui) => {
   **Red** means the letter is not in the word.`
 
 
-  const { answer, guesses } = ui.getState(() => ({
+  const { answer, guesses, startTime, gameRecorded } = ui.getState(() => ({
     answer: pickWord(),
     guesses: [],
+    startTime: Date.now(),
+    gameRecorded: false,
   }));
-  const { currentGuess } = ui.getState(() => ({ currentGuess: "hey" }));
+  const { currentGuess } = ui.getState(() => ({ currentGuess: "" }));
+
+  const { playerWon } = ui.getState(() => ({
+    playerWon: false
+  }))
+
+  function pushToGameStat(result) {
+    gameStats.push({
+      player: ui.user?.name || "Guest",
+      won: result === "won",
+      guesses: guesses.length,
+      word: answer,
+      timeTaken: Math.floor((Date.now() - startTime) / 1000),
+      timestamp: new Date(),
+    });
+  }
 
   const rows = guesses.map((guess, index) => ({
     id: index + 1,
@@ -87,31 +105,44 @@ sm.page("/wordle", (ui) => {
     size: "rows",
   });
 
-  if (guesses.length >= maxGuesses) {
-    if (guesses[guesses.length - 1].word === answer) {
-      playerWon = true;
-    } else {
-      ui.md`**Game over! The answer was ${answer}**`;
-      const restart = ui.button("restart", { label: "Play Again" });
-      if (restart.didClick) {
-        ui.setState(() => ({
-          answer: pickWord(),
-          guesses: [],
-        }));
-      }
-      return;
-    }
+  if (playerWon && !gameRecorded) {
+    pushToGameStat("won");
+    ui.setState(() => ({ gameRecorded: true }));
   }
 
   if (playerWon) {
     ui.md`**You guessed it! Click the button below to play again!**`;
+    
     const restart = ui.button("restart", { label: "Play Again" });
     if (restart.didClick) {
       ui.setState(() => ({
         answer: pickWord(),
         guesses: [],
+        playerWon: false,
+        startTime: Date.now(),
+        gameRecorded: false,
       }));
-      playerWon = false;
+    }
+    return;
+  }
+
+  if (guesses.length >= maxGuesses && !playerWon && !gameRecorded) {
+    pushToGameStat("lost");
+    ui.setState(() => ({ gameRecorded: true }));
+  }
+
+  if (guesses.length >= maxGuesses) {
+    ui.md`**Game over! The answer was ${answer}**`;
+
+    const restart = ui.button("restart", { label: "Play Again" });
+    if (restart.didClick) {
+      ui.setState(() => ({
+        answer: pickWord(),
+        guesses: [],
+        playerWon: false,
+        startTime: Date.now(),
+        gameRecorded: false,
+      }));
     }
     return;
   }
@@ -134,12 +165,56 @@ sm.page("/wordle", (ui) => {
     const guessWord = guessForm.val.guess.toUpperCase();
     const feedback = computeFeedback(guessWord, answer);
 
-    ui.setState(({ guesses }) => ({
+    ui.setState(({ guesses, currentGuess }) => ({
       guesses: [...guesses, { word: guessWord, feedback }],
+      currentGuess: "",
     }));
 
     if (guessWord === answer) {
-      playerWon = true;
-    }
+      ui.setState(() => ({ playerWon: true })); 
+    } 
   }
+  ui.link("View Dashboard", "/dashboard");
 });
+
+sm.page("/dashboard", (ui) => {
+  ui.md`# Game Stats Dashboard`;
+
+  if (gameStats.length === 0) {
+    ui.md`No games played yet!`;
+    return;
+  }
+
+  const totalGames = gameStats.length;
+  const totalWins = gameStats.filter(g => g.won).length;
+  const avgGuesses = (gameStats.reduce((sum, g) => sum + g.guesses, 0) / totalGames).toFixed(2);
+  const winRate = ((totalWins / totalGames) * 100).toFixed(1);
+
+  const overviewData = [{
+    totalGames: totalGames, 
+    totalWins: totalWins, 
+    avgGuesses: avgGuesses, 
+    winRate: winRate
+  }];
+
+  ui.table("Overview", overviewData, {
+    columns: {
+      totalGames: { label: "Total Games" },
+      totalWins: { label: "Total Wins" },
+      avgGuesses: { label: "Average Guesses" },
+      winRate: { label: "Win Rate " },
+    }
+  });
+
+  ui.table("Game History", gameStats, {
+    columns: {
+      player: { label: "Player" },
+      won: { label: "Won" },
+      guesses: { label: "Guesses" },
+      word: {label: "Word" },
+      timeTaken: { label: "Time (s)" },
+      timestamp: { label: "Played At" }
+    }
+  });
+});
+

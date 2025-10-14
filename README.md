@@ -23,9 +23,3 @@ A simple **Wordle** game built using the [SkyMass](https://skymass.dev) library.
 
 4. **Open the output URL**
     SkyMass will print a local or remote URL — open it in your browser to play!
-
----
-
-## Dashboard
-To view game statistics and player metrics, add this to the end of URL:
-/dashboard

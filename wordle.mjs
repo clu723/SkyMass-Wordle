@@ -45,12 +45,35 @@ function computeFeedback(guess, answer) {
 }
 
 sm.page("/wordle", (ui) => {
+  const nav = ui.nav("main_nav", {
+    queryParam: true,         
+    appearance: "tabs",       
+    defaultVal: "wordle",     
+    options: [
+      { value: "wordle", label: "Wordle", icon: "gamepad" },
+      { value: "dashboard", label: "Dashboard", icon: "bar-chart-2" },
+    ],
+  });
+
+  switch (nav.val) {
+    case "wordle":
+      return ui.region("wordle", (ui) => {
+        playWordle(ui);
+      });
+
+    case "dashboard":
+      return ui.region("dashboard", (ui) => {
+        showDashboard(ui);
+      });
+  }
+});
+
+function playWordle(ui) {
   ui.md`This is Wordle using SkyMass. You have **6** tries to guess the word.  
   You will be given feedback for each letter of your guess in the table below.  
   **Green** means the letter is in the word and in the correct spot.  
   **Blue** means the letter is in the word but in the wrong spot.  
   **Red** means the letter is not in the word.`
-
 
   const { answer, guesses, startTime, gameRecorded } = ui.getState(() => ({
     answer: pickWord(),
@@ -174,10 +197,9 @@ sm.page("/wordle", (ui) => {
       ui.setState(() => ({ playerWon: true })); 
     } 
   }
-  ui.link("View Dashboard", "/dashboard");
-});
+}
 
-sm.page("/dashboard", (ui) => {
+function showDashboard(ui) {
   ui.md`# Game Stats Dashboard`;
 
   if (gameStats.length === 0) {
@@ -216,5 +238,5 @@ sm.page("/dashboard", (ui) => {
       timestamp: { label: "Played At" }
     }
   });
-});
+};
 

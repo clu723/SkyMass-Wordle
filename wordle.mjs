@@ -170,32 +170,33 @@ function playWordle(ui) {
     return;
   }
 
-  const guessForm = ui.form("guess_form", {
-    fields: {
-      guess: ui.string("guess", {
-        label: "Enter your guess",
-        placeholder: "Enter guess here",
-        val: currentGuess,
-        required: true,
-        minLength: 5,
-        maxLength: 5,
-      }),
-    },
-    action: ui.submitButton("submit", { label: "Submit" }),
+  const guessInput = ui.string("guess", {
+    label: "Make a guess!",
+    placeholder: "Enter guess here",
+    required: true,
+    minLength: 5,
+    maxLength: 5,
   });
 
-  if (guessForm.didSubmit) {
-    const guessWord = guessForm.val.guess.toUpperCase();
+  const submitBtn = ui.button("submit_guess", {
+    label: "Submit",
+    disabled: !guessInput.isReady,
+  });
+
+  if (submitBtn.didClick) {
+    const guessWord = guessInput.val.toUpperCase();
     const feedback = computeFeedback(guessWord, answer);
 
-    ui.setState(({ guesses, currentGuess }) => ({
+    ui.setState(({ guesses }) => ({
       guesses: [...guesses, { word: guessWord, feedback }],
-      currentGuess: "",
     }));
 
     if (guessWord === answer) {
       ui.setState(() => ({ playerWon: true })); 
-    } 
+    }
+
+    guessInput.setVal("");
+    guessInput.focus();
   }
 }
 

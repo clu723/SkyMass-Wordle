@@ -21,23 +21,17 @@ function computeFeedback(guess, answer) {
     freq[char] = (freq[char] || 0) + 1;
   }
 
-  // correct
   for (let i = 0; i < guess.length; i++) {
-    if (guess[i] === answer[i]) {
+    const letter = guess[i];
+    if (letter === answer[i]) {
       result[i] = "correct";
-      freq[guess[i]]--;
-    }
-  }
-
-  // present
-  for (let i = 0; i < guess.length; i++) {
-    if (result[i] === "correct") {
+      freq[letter] -= 1;
       continue;
     }
-    const char = guess[i];
-    if (freq[char] && freq[char] > 0) {
+
+    if (freq[letter] && freq[letter] > 0) {
       result[i] = "present";
-      freq[char]--;
+      freq[letter] -= 1;
     }
   }
 
@@ -75,17 +69,13 @@ function playWordle(ui) {
   **Blue** means the letter is in the word but in the wrong spot.  
   **Red** means the letter is not in the word.`
 
-  const { answer, guesses, startTime, gameRecorded } = ui.getState(() => ({
+  const { answer, guesses, startTime, gameRecorded, playerWon } = ui.getState(() => ({
     answer: pickWord(),
     guesses: [],
     startTime: Date.now(),
     gameRecorded: false,
+    playerWon: false,
   }));
-  const { currentGuess } = ui.getState(() => ({ currentGuess: "" }));
-
-  const { playerWon } = ui.getState(() => ({
-    playerWon: false
-  }))
 
   function pushToGameStat(result) {
     gameStats.push({

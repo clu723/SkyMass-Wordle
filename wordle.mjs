@@ -39,10 +39,7 @@ function computeFeedback(guess, answer) {
 }
 
 sm.page("/wordle", (ui) => {
-  const nav = ui.nav("main_nav", {
-    queryParam: true,         
-    appearance: "tabs",       
-    defaultVal: "wordle",     
+  const nav = ui.nav("main_nav", {               
     options: [
       { value: "wordle", label: "Wordle", icon: "gamepad" },
       { value: "dashboard", label: "Dashboard", icon: "bar-chart-2" },

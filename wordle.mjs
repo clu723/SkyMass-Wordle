@@ -4,8 +4,6 @@ const sm = new SkyMass({ key: process.env["SKYMASS_KEY"] });
 
 const WORDS = ["APPLE", "BRAVE", "CRANE", "DANCE", "EPOCH"];
 
-const maxGuesses = 6;
-
 const gameStats = [];
 
 
@@ -66,13 +64,13 @@ function playWordle(ui) {
   **Blue** means the letter is in the word but in the wrong spot.  
   **Red** means the letter is not in the word.`
 
-  const { answer, guesses, startTime, gameRecorded, playerWon } = ui.getState(() => ({
+  const { answer, guesses, startTime } = ui.getState(() => ({
     answer: pickWord(),
     guesses: [],
     startTime: Date.now(),
-    gameRecorded: false,
-    playerWon: false,
   }));
+
+  const game_state = guesses[guesses.length - 1]?.word === answer ? "won" : guesses.length < 6 ? "play" : "lost";
 
   function pushToGameStat(result) {
     gameStats.push({
@@ -115,47 +113,43 @@ function playWordle(ui) {
     size: "rows",
   });
 
-  if (playerWon && !gameRecorded) {
-    pushToGameStat("won");
-    ui.setState(() => ({ gameRecorded: true }));
-  }
+  ui.effect("write_stats", () => {
+    console.log(game_state);
 
-  if (playerWon) {
+    if (game_state == "play") return;
+    // write the game states when game is won or lost
+
+    if (game_state === "won") pushToGameStat("won");
+    if (game_state === "lost") pushToGameStat("lost");
+
+  }, [game_state]);
+
+  if (game_state === "won") {
     ui.md`**You guessed it! Click the button below to play again!**`;
-    
     const restart = ui.button("restart", { label: "Play Again" });
     if (restart.didClick) {
       ui.setState(() => ({
         answer: pickWord(),
         guesses: [],
-        playerWon: false,
         startTime: Date.now(),
-        gameRecorded: false,
       }));
     }
     return;
   }
 
-  if (guesses.length >= maxGuesses && !playerWon && !gameRecorded) {
-    pushToGameStat("lost");
-    ui.setState(() => ({ gameRecorded: true }));
-  }
-
-  if (guesses.length >= maxGuesses) {
+  if (game_state === "lost") {
     ui.md`**Game over! The answer was ${answer}**`;
-
     const restart = ui.button("restart", { label: "Play Again" });
     if (restart.didClick) {
       ui.setState(() => ({
         answer: pickWord(),
         guesses: [],
-        playerWon: false,
         startTime: Date.now(),
-        gameRecorded: false,
       }));
     }
     return;
   }
+
 
   const guessInput = ui.string("guess", {
     label: "Make a guess!",
@@ -177,10 +171,6 @@ function playWordle(ui) {
     ui.setState(({ guesses }) => ({
       guesses: [...guesses, { word: guessWord, feedback }],
     }));
-
-    if (guessWord === answer) {
-      ui.setState(() => ({ playerWon: true })); 
-    }
 
     guessInput.setVal("");
     guessInput.focus();
